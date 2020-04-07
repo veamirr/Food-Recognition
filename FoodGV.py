@@ -30,7 +30,7 @@ def recognize_food(img_path):
     # height, width = img.shape[:2]
     # height = int(height/2)
     # width = int(width/2)
-    # img = img[0:2*height, 0:width]
+    # img = img[height:2*height, 0:width]
 
     # Save the image to temp file
     cv2.imwrite(SOURCE_PATH + "output.jpg", img)
@@ -62,22 +62,41 @@ def recognize_food(img_path):
         c = int(800*object_.bounding_poly.normalized_vertices[2].x)
         d = int(height*object_.bounding_poly.normalized_vertices[2].y)
         cv2.rectangle(img,(a,b),(c,d),(50,50,200),2)
+        # print(object_.name)
+
+        # if (object_.name == 'Tableware'):
+        #     print('hello')
 
         #first option to recognize
-        cv2.putText(img,object_.name,(int((a+c)/2),int((b+d)/2)),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0,0,0),2)
+        # cv2.putText(img,object_.name,(int((a+c)/2),int((b+d)/2)),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0,0,0),2)
 
         #second option to recognize (NOT PRODUCTIVE IN TIME)
-        # segment = img[b:d,a:c]
-        # cv2.imwrite(SOURCE_PATH + "peace.jpg", segment)
-        # img_path = SOURCE_PATH + "peace.jpg"
-        # client = vision.ImageAnnotatorClient()
-        # with io.open(img_path, 'rb') as image_file:
-        #     content = image_file.read()
-        # segment = vision.types.Image(content=content)
-        # objects_new = client.object_localization(image=image).localized_object_annotations
-        # for object in objects_new:
-        #     desc = object_.name
+        segment = img[b:d,a:c]
+        # cv2.imshow('Recognize & Draw', segment)
+        # cv2.waitKey(0)
+        cv2.imwrite(SOURCE_PATH + "peace.jpg", segment)
+        img_path = SOURCE_PATH + "peace.jpg"
+        client = vision.ImageAnnotatorClient()
+        with io.open(img_path, 'rb') as image_file:
+            content = image_file.read()
+        segment = vision.types.Image(content=content)
+        objects_new = client.object_localization(image=segment).localized_object_annotations
+        # print(objects_new)
+        for object_ in objects_new:
+            q = int((c-a) * object_.bounding_poly.normalized_vertices[0].x)
+            w = int((d-b) * object_.bounding_poly.normalized_vertices[0].y)
+            e = int((c-a)* object_.bounding_poly.normalized_vertices[2].x)
+            r = int((d-b) * object_.bounding_poly.normalized_vertices[2].y)
+            # print(c-a,e-q)
+            # if ((5*(e-q))<=(4*(c-a))):
+            #     cv2.rectangle(img, (a+q, b+w), (a+e, b+r), (50, 50, 200), 2)
+            if (q!=0 and w!=0 and e!=(c-a) and r!=(d-b) and 10*(e-q)<=9*(c-a)):
+                cv2.rectangle(img, (a+q, b+w), (a+e, b+r), (50, 50, 200), 2)
+            # print(e-q,c-a)
+            # cv2.imshow('Recognize & Draw', img)
+            # cv2.waitKey(0)
         # cv2.putText(img, desc, (a, int((b + d) / 2)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+        # break
 
         #third option to recognize(NOT PRODUCTIVE IN TIME, DOESNT CORRECTLY WORKS)
         # segment = img[b:d, a:c]
@@ -101,7 +120,7 @@ def recognize_food(img_path):
 
 print('---------- Start FOOD Recognition --------')
 start_time = datetime.now()
-for k in range(4,5):
+for k in range(3,9):
     path = SOURCE_PATH + '{id}.jpg'.format(id=k)
     res = recognize_food(path)
     cv2.imwrite(OUTPUT_PATH + "{id}.jpg".format(id=k), res)
